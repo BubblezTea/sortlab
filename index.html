@@ -1057,8 +1057,10 @@ class Interpreter {
             index = this.vis.values.length - 1
           }
           if (this.vis.values.length <= 1) throw new Error('cannot remove last bar')
+          const oldVal = this.vis.values[index]
           this.vis.values.splice(index, 1)
           this.vis.updateLayout()
+          playSound(oldVal, 'swap')
           break
         }
         case 'resizeBar': {
