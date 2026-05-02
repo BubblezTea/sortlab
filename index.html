@@ -802,7 +802,7 @@ class Visualizer {
 
 // ─── audio ────────────────────────────────────────────────────────────────────
 let _audioCtx = null
-const PENTA = [0,2,4,7,9,12,14,16,19,21]
+const CHROMATIC = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]
 
 function getCtx() {
   if (!_audioCtx) _audioCtx = new (window.AudioContext||window.webkitAudioContext)()
@@ -814,7 +814,7 @@ function snapFreq(raw) {
   const midi = n => 440 * Math.pow(2, (n - 69) / 12)
   let best = 440, bestDist = Infinity
   for (let oct = -1; oct <= 2; oct++) {
-    for (const s of PENTA) {
+    for (const s of CHROMATIC) {
       const f = midi(60 + oct * 12 + s)
       const d = Math.abs(f - raw)
       if (d < bestDist) { bestDist = d; best = f }
