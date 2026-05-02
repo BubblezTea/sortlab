@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sort Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
+
+:root {
+  --bg:       #0c0c10;
+  --bg2:      #12121a;
+  --bg3:      #1a1a26;
+  --border:   #2a2a3d;
+  --border2:  #3a3a55;
+  --text:     #d4d4f0;
+  --text-dim: #7070a0;
+  --accent:   #8b5cf6;
+  --accent2:  #a78bfa;
+  --green:    #4ade80;
+  --red:      #f87171;
+  --yellow:   #fbbf24;
+  --cyan:     #67e8f9;
+  --pink:     #f472b6;
+
+  --hl-kw:      #f472b6;
+  --hl-builtin: #67e8f9;
+  --hl-num:     #c084fc;
+  --hl-str:     #fbbf24;
+  --hl-comment: #525280;
+  --hl-op:      #94a3b8;
+}
+
+html, body { height: 100%; overflow: hidden }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── header ─────────────────────────────── */
+header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 20px;
+  height: 52px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent2), var(--cyan));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.5px;
+  flex-shrink: 0;
+}
+
+.hdr-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  border-radius: 7px;
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent2) }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff }
+.btn.primary:hover { background: var(--accent2); border-color: var(--accent2) }
+.btn:disabled { opacity: 0.4; cursor: not-allowed }
+.btn.danger { border-color: #6b2020 }
+.btn.danger:hover { border-color: var(--red); color: var(--red) }
+
+.slider-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.slider-wrap input[type=range] {
+  width: 80px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+#statBar {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-dim);
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+#statBar span { display: flex; gap: 5px; align-items: center }
+#statBar b { color: var(--cyan); font-weight: 600 }
+
+/* ── main layout ─────────────────────────── */
+main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── left: editor panel ───────────────────── */
+.editor-panel {
+  width: 44%;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.example-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 12px 0;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.ex-btn {
+  padding: 4px 10px;
+  border-radius: 6px 6px 0 0;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 12px;
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: -1px;
+}
+.ex-btn:hover { color: var(--text); background: var(--bg3) }
+.ex-btn.active {
+  color: var(--accent2);
+  background: var(--bg);
+  border-color: var(--border);
+  border-bottom-color: var(--bg);
+}
+
+.editor-wrap {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+}
+.editor-wrap pre,
+.editor-wrap textarea {
+  position: absolute;
+  inset: 0;
+  padding: 14px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow: auto;
+  border: none;
+  outline: none;
+  resize: none;
+  tab-size: 2;
+}
+.editor-wrap pre {
+  pointer-events: none;
+  z-index: 0;
+  color: var(--text);
+  background: var(--bg);
+  border-right: 1px solid var(--border);
+}
+.editor-wrap textarea {
+  z-index: 1;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--accent2);
+  -webkit-text-fill-color: transparent;
+  spellcheck: false;
+}
+
+/* syntax highlight colors */
+.hl-kw      { color: var(--hl-kw) }
+.hl-builtin { color: var(--hl-builtin) }
+.hl-num     { color: var(--hl-num) }
+.hl-str     { color: var(--hl-str) }
+.hl-comment { color: var(--hl-comment); font-style: italic }
+
+.console {
+  height: 32px;
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  overflow: hidden;
+  gap: 6px;
+}
+.console.ok   { color: var(--green) }
+.console.err  { color: var(--red) }
+.console.idle { color: var(--text-dim) }
+
+/* ── right: visualizer panel ──────────────── */
+.vis-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#vizContainer {
+  flex: 1;
+  position: relative;
+  padding: 12px 16px 0;
+  overflow: hidden;
+}
+
+.bar {
+  position: absolute;
+  bottom: 0;
+  border-radius: 3px 3px 0 0;
+  transition: left 0.2s cubic-bezier(0.34, 1.4, 0.64, 1),
+              background 0.15s ease,
+              height 0.2s ease;
+  will-change: left;
+}
+.bar.swapping {
+  z-index: 10;
+  filter: brightness(1.5) drop-shadow(0 0 6px currentColor);
+}
+@keyframes flashCmp {
+  0%   { filter: brightness(2.2) }
+  100% { filter: brightness(1) }
+}
+.bar.comparing {
+  animation: flashCmp 0.18s ease-out forwards;
+}
+@keyframes sortedPop {
+  0%   { transform: scaleY(1.06) }
+  100% { transform: scaleY(1) }
+}
+.bar.sorted-flash {
+  animation: sortedPop 0.25s ease-out forwards;
+}
+
+/* ── docs / reference ─────────────────────── */
+.ref-panel {
+  height: 130px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  padding: 10px 16px;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+.ref-panel h4 {
+  font-family: 'Syne', sans-serif;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.ref-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 4px 20px;
+}
+.ref-item {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.ref-item code {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--hl-builtin);
+  font-size: 11.5px;
+  flex-shrink: 0;
+}
+.ref-item span { color: var(--text-dim); font-size: 11.5px }
+
+.vis-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+#runningLabel {
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--text-dim);
+  margin-left: auto;
+}
+.dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  margin-right: 5px;
+  background: var(--text-dim);
+}
+.dot.running { background: var(--green); animation: pulse 0.9s infinite }
+.dot.done    { background: var(--accent2) }
+.dot.err     { background: var(--red) }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">⟨ Sort Lab ⟩</div>
+  <div class="hdr-controls">
+    <button class="btn primary" id="runBtn">▶ Run</button>
+    <button class="btn danger"  id="stopBtn" disabled>■ Stop</button>
+    <button class="btn"         id="shuffleBtn">⟳ Shuffle</button>
+  </div>
+  <div class="slider-wrap">
+    Speed
+    <input type="range" id="speedSlider" min="1" max="10" value="6">
+  </div>
+  <div class="slider-wrap">
+    Bars
+    <input type="range" id="barsSlider" min="5" max="50" value="20">
+    <span id="barsLabel">20</span>
+  </div>
+  <div id="statBar">
+    <span>Swaps <b id="swapCount">0</b></span>
+  </div>
+</header>
+
+<main>
+  <div class="editor-panel">
+    <div class="example-tabs" id="exTabs">
+      <button class="ex-btn active" data-algo="gnome">Gnome Sort</button>
+      <button class="ex-btn" data-algo="bubble">Bubble Sort</button>
+      <button class="ex-btn" data-algo="insertion">Insertion Sort</button>
+      <button class="ex-btn" data-algo="selection">Selection Sort</button>
+      <button class="ex-btn" data-algo="cocktail">Cocktail Sort</button>
+    </div>
+    <div class="editor-wrap">
+      <pre id="hlLayer" aria-hidden="true"></pre>
+      <textarea id="codeEditor" spellcheck="false" autocorrect="off" autocapitalize="off"></textarea>
+    </div>
+    <div class="console idle" id="console">
+      <span class="dot"></span>
+      <span id="consoleMsg">ready — press Run to start</span>
+    </div>
+  </div>
+
+  <div class="vis-panel">
+    <div id="vizContainer"></div>
+
+    <div class="vis-controls">
+      <span id="runningLabel"><span class="dot" id="statusDot"></span><span id="statusText">idle</span></span>
+    </div>
+
+    <div class="ref-panel">
+      <h4>Commands</h4>
+      <div class="ref-grid">
+        <div class="ref-item"><code>swap(i, j)</code><span>swap two bars</span></div>
+        <div class="ref-item"><code>getValue(i)</code><span>get the height of bar i</span></div>
+        <div class="ref-item"><code>length</code><span>total number of bars</span></div>
+        <div class="ref-item"><code>mark(i, "color")</code><span>color a bar (red/green/yellow/blue/purple)</span></div>
+        <div class="ref-item"><code>unmark(i)</code><span>remove color from bar i</span></div>
+        <div class="ref-item"><code>unmarkAll()</code><span>remove all colors</span></div>
+        <div class="ref-item"><code>for i = 1 to length do</code><span>repeat with a counter</span></div>
+        <div class="ref-item"><code>while something do</code><span>repeat while true</span></div>
+        <div class="ref-item"><code>if a > b then</code><span>do something if true</span></div>
+        <div class="ref-item"><code>floor(x) · ceil(x) · abs(x)</code><span>math helpers</span></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ─── examples ────────────────────────────────────────────────────────────────
+const EXAMPLES = {
+  gnome: `-- gnome sort: the simplest real sorting algorithm!
+-- imagine a garden gnome sorting flower pots:
+-- if the current pot is in the right place, move forward.
+-- otherwise, swap it back and take a step back.
+
+i = 2
+while i <= length do
+    if i == 1 or getValue(i) >= getValue(i - 1) then
+        i = i + 1
+    else
+        swap(i, i - 1)
+        i = i - 1
+    end
+end`,
+
+  bubble: `-- bubble sort: compare neighbors and push big ones to the end.
+-- after each full pass, the biggest unsorted bar is in place.
+
+for i = 1 to length do
+    for j = 1 to length - i do
+        if getValue(j) > getValue(j + 1) then
+            swap(j, j + 1)
+        end
+    end
+end`,
+
+  insertion: `-- insertion sort: like sorting cards in your hand.
+-- pick each card and slide it left until it's in the right spot.
+
+for i = 2 to length do
+    j = i
+    while j > 1 and getValue(j) < getValue(j - 1) do
+        swap(j, j - 1)
+        j = j - 1
+    end
+end`,
+
+  selection: `-- selection sort: find the smallest bar, put it first. repeat.
+-- scan the whole unsorted part each time to find the minimum.
+
+for i = 1 to length do
+    minPos = i
+    for j = i + 1 to length do
+        if getValue(j) < getValue(minPos) then
+            minPos = j
+        end
+    end
+    if minPos ~= i then
+        swap(i, minPos)
+    end
+end`,
+
+  cocktail: `-- cocktail shaker sort: bubble sort in both directions.
+-- one pass pushes big things right, the next pushes small things left.
+
+left = 1
+right = length
+while left < right do
+    for i = left to right - 1 do
+        if getValue(i) > getValue(i + 1) then
+            swap(i, i + 1)
+        end
+    end
+    right = right - 1
+    for i = right to left + 1 step -1 do
+        if getValue(i) < getValue(i - 1) then
+            swap(i, i - 1)
+        end
+    end
+    left = left + 1
+end`
+}
+
+// ─── tokenizer ────────────────────────────────────────────────────────────────
+const KEYWORDS = new Set(['for','to','step','do','end','while','if','then','else',
+  'elseif','and','or','not','true','false','let','break'])
+
+function tokenize(src) {
+  const toks = []
+  let i = 0
+  while (i < src.length) {
+    const c = src[i]
+    if (/\s/.test(c)) { i++; continue }
+    if (c === '-' && src[i+1] === '-') { while (i < src.length && src[i] !== '\n') i++; continue }
+    if (c === '"' || c === "'") {
+      const q = c; let s = ''; i++
+      while (i < src.length && src[i] !== q) s += src[i++]
+      i++; toks.push({ t: 'STR', v: s }); continue
+    }
+    if (/\d/.test(c)) {
+      let n = ''
+      while (i < src.length && /[\d.]/.test(src[i])) n += src[i++]
+      toks.push({ t: 'NUM', v: parseFloat(n) }); continue
+    }
+    if (/[a-zA-Z_]/.test(c)) {
+      let id = ''
+      while (i < src.length && /[a-zA-Z0-9_]/.test(src[i])) id += src[i++]
+      toks.push({ t: KEYWORDS.has(id) ? id : 'ID', v: id }); continue
+    }
+    const two = src.slice(i, i+2)
+    if (two === '==') { toks.push({ t: '==' }); i += 2; continue }
+    if (two === '~=' || two === '!=') { toks.push({ t: '~=' }); i += 2; continue }
+    if (two === '<=') { toks.push({ t: '<=' }); i += 2; continue }
+    if (two === '>=') { toks.push({ t: '>=' }); i += 2; continue }
+    if ('+-*/%^<>=(),'.includes(c)) { toks.push({ t: c }); i++; continue }
+    i++
+  }
+  toks.push({ t: 'EOF' })
+  return toks
+}
+
+// ─── parser ───────────────────────────────────────────────────────────────────
+const BLOCK_ENDS = new Set(['end','else','elseif','EOF'])
+
+class Parser {
+  constructor(toks) { this.toks = toks; this.pos = 0 }
+  peek()    { return this.toks[this.pos] }
+  adv()     { return this.toks[this.pos++] }
+  check(t)  { return this.peek().t === t }
+  eat(t)    {
+    if (!this.check(t)) throw new Error(`Expected '${t}', got '${this.peek().t || this.peek().v}'`)
+    return this.adv()
+  }
+  tryEat(t) { if (this.check(t)) return this.adv(); return null }
+
+  parseBlock() {
+    const stmts = []
+    while (!BLOCK_ENDS.has(this.peek().t)) stmts.push(this.parseStmt())
+    return stmts
+  }
+
+  parseStmt() {
+    const t = this.peek().t
+    if (t === 'for')   return this.parseFor()
+    if (t === 'while') return this.parseWhile()
+    if (t === 'if')    return this.parseIf()
+    if (t === 'let')   { this.adv(); const n = this.eat('ID').v; this.eat('='); return { k:'assign', name:n, val:this.parseExpr() } }
+    if (t === 'break') { this.adv(); return { k:'break' } }
+    if (t === 'ID') {
+      const name = this.adv().v
+      if (this.tryEat('=')) return { k:'assign', name, val:this.parseExpr() }
+      if (this.check('('))  return { k:'call', name, args:this.parseArgs() }
+      throw new Error(`Unexpected: '${name}'`)
+    }
+    throw new Error(`Unexpected token: '${t}'`)
+  }
+
+  parseArgs() {
+    this.eat('('); const args = []
+    while (!this.check(')') && !this.check('EOF')) {
+      args.push(this.parseExpr()); this.tryEat(',')
+    }
+    this.eat(')'); return args
+  }
+
+  parseFor() {
+    this.eat('for'); const varName = this.eat('ID').v; this.eat('=')
+    const start = this.parseExpr(); this.eat('to'); const limit = this.parseExpr()
+    const step  = this.tryEat('step') ? this.parseExpr() : null
+    this.eat('do'); const body = this.parseBlock(); this.eat('end')
+    return { k:'for', varName, start, limit, step, body }
+  }
+
+  parseWhile() {
+    this.eat('while'); const cond = this.parseExpr(); this.eat('do')
+    const body = this.parseBlock(); this.eat('end')
+    return { k:'while', cond, body }
+  }
+
+  parseIf() {
+    this.eat('if'); const cond = this.parseExpr(); this.eat('then'); const then = this.parseBlock()
+    const elseifs = []; let els = null
+    while (this.check('elseif')) {
+      this.adv(); const c = this.parseExpr(); this.eat('then')
+      elseifs.push({ c, body: this.parseBlock() })
+    }
+    if (this.tryEat('else')) els = this.parseBlock()
+    this.eat('end')
+    return { k:'if', cond, then, elseifs, els }
+  }
+
+  parseExpr() { return this.parseOr() }
+  parseOr()   { let l = this.parseAnd(); while (this.check('or'))  { this.adv(); l = {k:'bin',op:'or', l,r:this.parseAnd()} }; return l }
+  parseAnd()  { let l = this.parseNot(); while (this.check('and')) { this.adv(); l = {k:'bin',op:'and',l,r:this.parseNot()} }; return l }
+  parseNot()  { if (this.check('not')) { this.adv(); return {k:'un',op:'not',v:this.parseNot()} }; return this.parseCmp() }
+  parseCmp()  {
+    let l = this.parseAdd()
+    while (['==','~=','<','>','<=','>='].includes(this.peek().t)) { const op=this.adv().t; l={k:'bin',op,l,r:this.parseAdd()} }
+    return l
+  }
+  parseAdd()  {
+    let l = this.parseMul()
+    while (['+','-'].includes(this.peek().t)) { const op=this.adv().t; l={k:'bin',op,l,r:this.parseMul()} }
+    return l
+  }
+  parseMul()  {
+    let l = this.parseUnary()
+    while (['*','/','%'].includes(this.peek().t)) { const op=this.adv().t; l={k:'bin',op,l,r:this.parseUnary()} }
+    return l
+  }
+  parseUnary() { if (this.check('-')) { this.adv(); return {k:'un',op:'neg',v:this.parsePow()} }; return this.parsePow() }
+  parsePow()   {
+    let l = this.parsePrimary()
+    if (this.check('^')) { this.adv(); return {k:'bin',op:'^',l,r:this.parseUnary()} }
+    return l
+  }
+  parsePrimary() {
+    const t = this.peek()
+    if (t.t === 'NUM')   { this.adv(); return { k:'num', v:t.v } }
+    if (t.t === 'STR')   { this.adv(); return { k:'str', v:t.v } }
+    if (t.t === 'true')  { this.adv(); return { k:'bool',v:true } }
+    if (t.t === 'false') { this.adv(); return { k:'bool',v:false } }
+    if (t.t === 'ID') {
+      const name = this.adv().v
+      if (this.check('(')) return { k:'call', name, args:this.parseArgs() }
+      return { k:'var', name }
+    }
+    if (this.tryEat('(')) { const e = this.parseExpr(); this.eat(')'); return e }
+    throw new Error(`Unexpected in expression: '${t.t}' ('${t.v||''}')`  )
+  }
+}
+
+// ─── visualizer ───────────────────────────────────────────────────────────────
+class Visualizer {
+  constructor(container) {
+    this.container = container
+    this.values = []; this.els = []; this.barW = 0
+  }
+  get length() { return this.values.length }
+
+  init(n) {
+    this.container.innerHTML = ''
+    this.values = []; this.els = []
+    for (let i = 0; i < n; i++) this.values.push(Math.floor(Math.random() * 88) + 8)
+    this.barW = this.container.clientWidth / n
+    this.values.forEach((v, i) => {
+      const el = document.createElement('div')
+      el.className = 'bar'
+      this._styleBar(el, v, i)
+      this.container.appendChild(el)
+      this.els.push(el)
+    })
+  }
+
+  _styleBar(el, v, i) {
+    el.style.height  = v + '%'
+    el.style.left    = (i * this.barW) + 'px'
+    el.style.width   = Math.max(2, this.barW - 2) + 'px'
+    el.style.background = this.defaultColor(v)
+  }
+
+  defaultColor(v) {
+    return `hsl(${220 - v * 1.8}, 75%, 62%)`
+  }
+
+  async swap(i, j) {
+    if (i === j) return
+    const [ei, ej] = [this.els[i], this.els[j]]
+    ei.classList.add('swapping'); ej.classList.add('swapping')
+    playSound(this.values[i], 'swap'); playSound(this.values[j], 'swap')
+    const li = parseFloat(ei.style.left), lj = parseFloat(ej.style.left)
+    ei.style.left = lj + 'px'; ej.style.left = li + 'px'
+    ;[this.els[i], this.els[j]] = [this.els[j], this.els[i]]
+    ;[this.values[i], this.values[j]] = [this.values[j], this.values[i]]
+    await sleep(220)
+    ei.classList.remove('swapping'); ej.classList.remove('swapping')
+  }
+
+  flashBar(i) {
+    const el = this.els[i]; if (!el) return
+    el.classList.remove('comparing')
+    void el.offsetWidth
+    el.classList.add('comparing')
+    setTimeout(() => el.classList.remove('comparing'), 180)
+    playSound(this.values[i], 'compare')
+  }
+
+  markBar(i, color) {
+    const el = this.els[i]; if (!el) return
+    const MAP = { red:'#f87171', green:'#4ade80', yellow:'#fbbf24', blue:'#67e8f9', purple:'#c084fc', white:'#fff', orange:'#fb923c' }
+    el.style.background = MAP[color] || MAP.yellow
+    el.dataset.marked = '1'
+  }
+
+  unmarkBar(i) {
+    const el = this.els[i]; if (!el) return
+    el.style.background = this.defaultColor(this.values[i])
+    delete el.dataset.marked
+  }
+
+  unmarkAll() {
+    this.els.forEach((el, i) => {
+      el.style.background = this.defaultColor(this.values[i])
+      delete el.dataset.marked
+    })
+  }
+
+  markAllSorted() {
+    const n = this.els.length
+    this.els.forEach((el, i) => {
+      setTimeout(() => {
+        el.style.background = `hsl(${(i / n) * 130 + 100}, 80%, 60%)`
+        el.classList.add('sorted-flash')
+        setTimeout(() => el.classList.remove('sorted-flash'), 300)
+        playSound(this.values[i], 'done')
+      }, i * 35)
+    })
+  }
+}
+
+// ─── audio ────────────────────────────────────────────────────────────────────
+let _audioCtx = null
+const PENTA = [0,2,4,7,9,12,14,16,19,21]
+
+function getCtx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext||window.webkitAudioContext)()
+  if (_audioCtx.state === 'suspended') _audioCtx.resume()
+  return _audioCtx
+}
+
+function snapFreq(raw) {
+  const midi = n => 440 * Math.pow(2, (n - 69) / 12)
+  let best = 440, bestDist = Infinity
+  for (let oct = -1; oct <= 2; oct++) {
+    for (const s of PENTA) {
+      const f = midi(60 + oct * 12 + s)
+      const d = Math.abs(f - raw)
+      if (d < bestDist) { bestDist = d; best = f }
+    }
+  }
+  return best
+}
+
+function playSound(value, type) {
+  try {
+    const ctx = getCtx()
+    const osc  = ctx.createOscillator()
+    const gain = ctx.createGain()
+    const now  = ctx.currentTime
+    const raw  = 160 + (value / 100) * 780
+    osc.frequency.value = snapFreq(raw)
+    osc.type = type === 'swap' ? 'triangle' : type === 'done' ? 'sine' : 'sine'
+    const vol = type === 'compare' ? 0.06 : type === 'done' ? 0.12 : 0.18
+    const dur = type === 'done' ? 0.35 : 0.12
+    gain.gain.setValueAtTime(vol, now)
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + dur)
+    osc.connect(gain); gain.connect(ctx.destination)
+    osc.start(now); osc.stop(now + dur + 0.05)
+  } catch(e) {}
+}
+
+// ─── interpreter ──────────────────────────────────────────────────────────────
+const sleep = ms => new Promise(r => setTimeout(r, ms))
+
+class Interpreter {
+  constructor(vis) {
+    this.vis     = vis
+    this.stopped = false
+    this.swaps   = 0
+    this.getDelay = () => 300
+  }
+
+  stop() { this.stopped = true }
+  tick() { if (this.stopped) throw { t:'stop' } }
+
+  async delay() { await sleep(this.getDelay()); this.tick() }
+
+  setVar(env, name, val) {
+    let e = env
+    while (e && e !== Object.prototype) {
+      if (Object.prototype.hasOwnProperty.call(e, name)) { e[name] = val; return }
+      e = Object.getPrototypeOf(e)
+    }
+    env[name] = val
+  }
+
+  getVar(env, name) {
+    let e = env
+    while (e && e !== Object.prototype) {
+      if (Object.prototype.hasOwnProperty.call(e, name)) return e[name]
+      e = Object.getPrototypeOf(e)
+    }
+    if (name === 'length') return this.vis.length
+    throw new Error(`Unknown variable: '${name}'`)
+  }
+
+  async run(code) {
+    this.stopped = false; this.swaps = 0
+    const toks = tokenize(code)
+    const parser = new Parser(toks)
+    let stmts
+    try {
+      stmts = parser.parseBlock()
+      if (!parser.check('EOF')) throw new Error(`Unexpected: '${parser.peek().t}'`)
+    } catch(e) { throw new Error(`Syntax error — ${e.message}`) }
+    try {
+      await this.execBlock(stmts, {})
+    } catch(e) {
+      if (e && e.t === 'stop') return
+      throw e
+    }
+    this.vis.markAllSorted()
+  }
+
+  async execBlock(stmts, env) {
+    for (const s of stmts) { this.tick(); await this.execStmt(s, env) }
+  }
+
+  async execStmt(s, env) {
+    switch (s.k) {
+      case 'assign': this.setVar(env, s.name, await this.evalExpr(s.val, env)); break
+      case 'call':   await this.callFn(s.name, s.args, env); break
+      case 'for':    await this.execFor(s, env); break
+      case 'while':  await this.execWhile(s, env); break
+      case 'if':     await this.execIf(s, env); break
+      case 'break':  throw { t:'break' }
+    }
+  }
+
+  async execFor(s, env) {
+    const child = Object.create(env)
+    const start = await this.evalExpr(s.start, child)
+    const limit = await this.evalExpr(s.limit, child)
+    const step  = s.step ? await this.evalExpr(s.step, child) : 1
+    const cond  = step >= 0 ? v => v <= limit : v => v >= limit
+    for (let v = start; cond(v); v += step) {
+      this.tick(); child[s.varName] = v
+      try { await this.execBlock(s.body, child) }
+      catch(e) { if (e && e.t === 'break') break; throw e }
+    }
+  }
+
+  async execWhile(s, env) {
+    const child = Object.create(env)
+    while (await this.evalExpr(s.cond, child)) {
+      this.tick()
+      try { await this.execBlock(s.body, child) }
+      catch(e) { if (e && e.t === 'break') break; throw e }
+    }
+  }
+
+  async execIf(s, env) {
+    if (await this.evalExpr(s.cond, env)) { await this.execBlock(s.then, env); return }
+    for (const ei of s.elseifs) {
+      if (await this.evalExpr(ei.c, env)) { await this.execBlock(ei.body, env); return }
+    }
+    if (s.els) await this.execBlock(s.els, env)
+  }
+
+  async evalExpr(e, env) {
+    switch (e.k) {
+      case 'num':  return e.v
+      case 'str':  return e.v
+      case 'bool': return e.v
+      case 'var':  return this.getVar(env, e.name)
+      case 'un': {
+        const v = await this.evalExpr(e.v, env)
+        return e.op === 'neg' ? -v : !v
+      }
+      case 'bin': {
+        if (e.op === 'and') return (await this.evalExpr(e.l,env)) && (await this.evalExpr(e.r,env))
+        if (e.op === 'or')  return (await this.evalExpr(e.l,env)) || (await this.evalExpr(e.r,env))
+        const [l, r] = [await this.evalExpr(e.l,env), await this.evalExpr(e.r,env)]
+        switch (e.op) {
+          case '+':  return l + r
+          case '-':  return l - r
+          case '*':  return l * r
+          case '/':  return r !== 0 ? l / r : 0
+          case '%':  return ((l % r) + Math.abs(r)) % Math.abs(r)
+          case '^':  return Math.pow(l, r)
+          case '==': return l === r
+          case '~=': return l !== r
+          case '<':  return l < r
+          case '>':  return l > r
+          case '<=': return l <= r
+          case '>=': return l >= r
+        }
+      }
+      case 'call': return await this.callFn(e.name, e.args, env)
+    }
+  }
+
+  async callFn(name, argNodes, env) {
+    const args = await Promise.all(argNodes.map(a => this.evalExpr(a, env)))
+    const n    = this.vis.length
+    const chk  = (i, fn) => { if (i < 0 || i >= n) throw new Error(`${fn}: index ${i+1} is out of range (1 to ${n})`) }
+
+    switch (name) {
+      case 'swap': {
+        const [i, j] = [Math.round(args[0])-1, Math.round(args[1])-1]
+        chk(i,'swap'); chk(j,'swap')
+        this.vis.unmarkAll()
+        this.swaps++
+        swapCountEl.textContent = this.swaps
+        await this.vis.swap(i, j)
+        await this.delay()
+        break
+      }
+      case 'getValue': {
+        const i = Math.round(args[0]) - 1
+        chk(i, 'getValue')
+        this.vis.flashBar(i)
+        return this.vis.values[i]
+      }
+      case 'mark': {
+        const i = Math.round(args[0]) - 1
+        chk(i, 'mark')
+        this.vis.markBar(i, args[1] || 'yellow')
+        break
+      }
+      case 'unmark': {
+        const i = Math.round(args[0]) - 1
+        chk(i, 'unmark')
+        this.vis.unmarkBar(i)
+        break
+      }
+      case 'unmarkAll': this.vis.unmarkAll(); break
+      case 'wait':      await sleep(args[0] ?? 200); break
+      case 'floor':     return Math.floor(args[0])
+      case 'ceil':      return Math.ceil(args[0])
+      case 'round':     return Math.round(args[0])
+      case 'abs':       return Math.abs(args[0])
+      case 'sqrt':      return Math.sqrt(args[0])
+      case 'min':       return Math.min(args[0], args[1])
+      case 'max':       return Math.max(args[0], args[1])
+      default:          throw new Error(`Unknown function: '${name}'`)
+    }
+  }
+}
+
+// ─── syntax highlighter ───────────────────────────────────────────────────────
+const HL_KW       = new Set(['for','to','step','do','end','while','if','then','else','elseif','and','or','not','true','false','let','break'])
+const HL_BUILTINS = new Set(['swap','getValue','mark','unmark','unmarkAll','wait','length','floor','ceil','round','abs','sqrt','min','max'])
+
+function highlight(code) {
+  let out = []; let i = 0
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+
+  while (i < code.length) {
+    const c = code[i]
+    if (c === '-' && code[i+1] === '-') {
+      let j = i; while (j < code.length && code[j] !== '\n') j++
+      out.push(`<span class="hl-comment">${esc(code.slice(i,j))}</span>`)
+      i = j; continue
+    }
+    if (c === '"' || c === "'") {
+      const q = c; let j = i+1
+      while (j < code.length && code[j] !== q) j++
+      j++
+      out.push(`<span class="hl-str">${esc(code.slice(i,j))}</span>`)
+      i = j; continue
+    }
+    if (/\d/.test(c)) {
+      let j = i; while (j < code.length && /[\d.]/.test(code[j])) j++
+      out.push(`<span class="hl-num">${esc(code.slice(i,j))}</span>`)
+      i = j; continue
+    }
+    if (/[a-zA-Z_]/.test(c)) {
+      let j = i; while (j < code.length && /[a-zA-Z0-9_]/.test(code[j])) j++
+      const word = code.slice(i,j)
+      if (HL_KW.has(word))       out.push(`<span class="hl-kw">${word}</span>`)
+      else if (HL_BUILTINS.has(word)) out.push(`<span class="hl-builtin">${word}</span>`)
+      else                        out.push(esc(word))
+      i = j; continue
+    }
+    out.push(esc(c)); i++
+  }
+  return out.join('') + '\n'
+}
+
+// ─── app wiring ───────────────────────────────────────────────────────────────
+const vizContainer = document.getElementById('vizContainer')
+const codeEditor   = document.getElementById('codeEditor')
+const hlLayer      = document.getElementById('hlLayer')
+const runBtn       = document.getElementById('runBtn')
+const stopBtn      = document.getElementById('stopBtn')
+const shuffleBtn   = document.getElementById('shuffleBtn')
+const speedSlider  = document.getElementById('speedSlider')
+const barsSlider   = document.getElementById('barsSlider')
+const barsLabel    = document.getElementById('barsLabel')
+const consoleEl    = document.getElementById('console')
+const consoleMsgEl = document.getElementById('consoleMsg')
+const swapCountEl  = document.getElementById('swapCount')
+const statusDot    = document.getElementById('statusDot')
+const statusText   = document.getElementById('statusText')
+const exTabs       = document.getElementById('exTabs')
+
+const vis = new Visualizer(vizContainer)
+let interp = null
+
+function getDelay() {
+  const s = parseInt(speedSlider.value)
+  return Math.round(200 + ((10 - s) / 9) * 1800)
+}
+
+function setStatus(state, msg) {
+  statusDot.className  = `dot ${state}`
+  statusText.textContent = msg
+}
+
+function setConsole(type, msg) {
+  consoleEl.className = `console ${type}`
+  consoleMsgEl.textContent = msg
+}
+
+function setRunning(yes) {
+  runBtn.disabled     = yes
+  stopBtn.disabled    = !yes
+  shuffleBtn.disabled = yes
+  barsSlider.disabled = yes
+  codeEditor.readOnly = yes
+  exTabs.querySelectorAll('.ex-btn').forEach(b => b.disabled = yes)
+}
+
+async function run() {
+  setRunning(true)
+  setStatus('running', 'running...')
+  setConsole('idle', '...')
+  swapCountEl.textContent = '0'
+  vis.unmarkAll()
+
+  interp = new Interpreter(vis)
+  interp.getDelay = getDelay
+
+  try {
+    await interp.run(codeEditor.value)
+    if (!interp.stopped) {
+      setConsole('ok', `done — ${interp.swaps} swap${interp.swaps !== 1 ? 's' : ''}`)
+      setStatus('done', 'sorted!')
+    } else {
+      setConsole('idle', 'stopped')
+      setStatus('', 'stopped')
+    }
+  } catch(e) {
+    setConsole('err', e.message)
+    setStatus('err', 'error')
+    vis.unmarkAll()
+  }
+
+  setRunning(false)
+}
+
+function stop() {
+  if (interp) interp.stop()
+}
+
+function shuffle() {
+  const n = parseInt(barsSlider.value)
+  vis.init(n)
+  swapCountEl.textContent = '0'
+  setConsole('idle', 'ready — press Run to start')
+  setStatus('', 'idle')
+}
+
+// editor sync
+codeEditor.addEventListener('input', () => {
+  hlLayer.innerHTML = highlight(codeEditor.value)
+})
+codeEditor.addEventListener('scroll', () => {
+  hlLayer.scrollTop  = codeEditor.scrollTop
+  hlLayer.scrollLeft = codeEditor.scrollLeft
+})
+codeEditor.addEventListener('keydown', e => {
+  if (e.key === 'Tab') {
+    e.preventDefault()
+    const s = codeEditor.selectionStart, end = codeEditor.selectionEnd
+    codeEditor.value = codeEditor.value.slice(0,s) + '    ' + codeEditor.value.slice(end)
+    codeEditor.selectionStart = codeEditor.selectionEnd = s + 4
+    codeEditor.dispatchEvent(new Event('input'))
+  }
+})
+
+// example tabs
+exTabs.addEventListener('click', e => {
+  const btn = e.target.closest('.ex-btn')
+  if (!btn) return
+  exTabs.querySelectorAll('.ex-btn').forEach(b => b.classList.remove('active'))
+  btn.classList.add('active')
+  codeEditor.value = EXAMPLES[btn.dataset.algo]
+  codeEditor.dispatchEvent(new Event('input'))
+})
+
+barsSlider.addEventListener('input', () => { barsLabel.textContent = barsSlider.value; shuffle() })
+
+runBtn.addEventListener('click', run)
+stopBtn.addEventListener('click', stop)
+shuffleBtn.addEventListener('click', shuffle)
+
+// init
+codeEditor.value = EXAMPLES.gnome
+codeEditor.dispatchEvent(new Event('input'))
+vis.init(parseInt(barsSlider.value))
+setStatus('', 'idle')
+
+// handle resize
+window.addEventListener('resize', () => {
+  const n = vis.length
+  if (!n) return
+  vis.barW = vizContainer.clientWidth / n
+  vis.els.forEach((el, i) => {
+    el.style.left  = (i * vis.barW) + 'px'
+    el.style.width = Math.max(2, vis.barW - 2) + 'px'
+  })
+})
+</script>
+</body>
+</html>
