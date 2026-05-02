@@ -491,41 +491,125 @@ while left < right do
     left = left + 1
 end`,
 
-  furElise: `-- Für Elise (main theme) - Piano with reverb
-addBar(64) wait(250) wait(35)
-addBar(61) wait(180) wait(35)
-addBar(64) wait(250) wait(35)
-addBar(61) wait(180) wait(35)
-addBar(64) wait(300) wait(50)
-addBar(48) wait(180) wait(35)
-addBar(60) wait(180) wait(35)
-addBar(52) wait(300) wait(50)
-addBar(44) wait(500) wait(80)
-addBar(52) wait(180) wait(35)
-addBar(64) wait(180) wait(35)
-addBar(76) wait(180) wait(35)
-addBar(80) wait(350) wait(80)
-addBar(64) wait(180) wait(35)
-addBar(41) wait(180) wait(35)
-addBar(80) wait(180) wait(35)
-addBar(84) wait(400) wait(80)
-addBar(64) wait(250) wait(35)
-addBar(61) wait(180) wait(35)
-addBar(64) wait(250) wait(35)
-addBar(61) wait(180) wait(35)
-addBar(64) wait(300) wait(50)
-addBar(48) wait(180) wait(35)
-addBar(60) wait(180) wait(35)
-addBar(52) wait(300) wait(80)
-addBar(44) wait(400) wait(50)
-addBar(52) wait(400)
-addBar(64) wait(250) wait(35)
-addBar(76) wait(180) wait(35)
-addBar(80) wait(250) wait(35)
-addBar(64) wait(180) wait(35)
-addBar(84) wait(300) wait(50)
-addBar(80) wait(180) wait(35)
-addBar(76) wait(500) wait(50)`,
+  furElise: `-- Für Elise (Bagatelle No. 25 in A minor) - Main Theme
+--
+-- Note to bar height mapping:
+-- E7 = high (not used here)
+-- C6 = 84
+-- B5 = 80,  A5 = 76,  G5 = 72,  F#5 = 68,  E5 = 64
+-- D5 = 60,  C#5 = 56,  C5 = 52,  B4 = 48,  A4 = 44
+-- G#4 = 41, G4 = 38,  F#4 = 35,  E4 = 32,  D#4 = 29
+-- D4 = 27,  C#4 = 25,  C4 = 23,  B3 = 21,  A3 = 18
+--
+
+-- First phrase: E5 Eb5 E5 Eb5 E5 B4 D5 C5
+addBar(64)  -- E5
+wait(250)
+wait(35)   -- micro rest
+addBar(61)  -- Eb5
+wait(180)
+wait(35)
+addBar(64)  -- E5
+wait(250)
+wait(35)
+addBar(61)  -- Eb5
+wait(180)
+wait(35)
+addBar(64)  -- E5
+wait(300)
+wait(50)
+addBar(48)  -- B4
+wait(180)
+wait(35)
+addBar(60)  -- D5
+wait(180)
+wait(35)
+addBar(52)  -- C5
+wait(300)
+wait(50)
+
+-- Second phrase: A4 pause C5 E5 A5 B5 pause E5 G#5 B5 C6
+addBar(44)  -- A4
+wait(500)
+wait(80)   -- longer rest
+addBar(52)  -- C5
+wait(180)
+wait(35)
+addBar(64)  -- E5
+wait(180)
+wait(35)
+addBar(76)  -- A5
+wait(180)
+wait(35)
+addBar(80)  -- B5
+wait(350)
+wait(80)
+addBar(64)  -- E5
+wait(180)
+wait(35)
+addBar(69)  -- G#5
+wait(180)
+wait(35)
+addBar(80)  -- B5
+wait(180)
+wait(35)
+addBar(84)  -- C6
+wait(400)
+wait(80)
+
+-- Third phrase: E5 Eb5 E5 Eb5 E5 B4 D5 C5 A4 pause C5
+addBar(64)  -- E5
+wait(250)
+wait(35)
+addBar(61)  -- Eb5
+wait(180)
+wait(35)
+addBar(64)  -- E5
+wait(250)
+wait(35)
+addBar(61)  -- Eb5
+wait(180)
+wait(35)
+addBar(64)  -- E5
+wait(300)
+wait(50)
+addBar(48)  -- B4
+wait(180)
+wait(35)
+addBar(60)  -- D5
+wait(180)
+wait(35)
+addBar(52)  -- C5
+wait(350)
+wait(80)
+addBar(44)  -- A4
+wait(400)
+wait(50)
+addBar(52)  -- C5
+wait(400)
+
+-- Final phrase: E5 A5 B5 E5 C6 B5 A5 (and a closing rest)
+addBar(64)  -- E5
+wait(250)
+wait(35)
+addBar(76)  -- A5
+wait(180)
+wait(35)
+addBar(80)  -- B5
+wait(250)
+wait(35)
+addBar(64)  -- E5
+wait(180)
+wait(35)
+addBar(84)  -- C6
+wait(300)
+wait(50)
+addBar(80)  -- B5
+wait(180)
+wait(35)
+addBar(76)  -- A5
+wait(500)
+wait(50)   -- final rest`,
 }
 
 // ─── tokenizer ────────────────────────────────────────────────────────────────
