@@ -991,7 +991,6 @@ class Interpreter {
       case 'getValue': {
         const i = Math.round(args[0]) - 1
         chk(i, 'getValue')
-        this.vis.flashBar(i)
         return this.vis.values[i]
       }
       case 'mark': {
