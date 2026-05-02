@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sort Lab • Now even scariest!</title>
+<title>Sort Lab • I'm scared</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
@@ -1043,6 +1043,7 @@ class Interpreter {
     this.stopped = false
     this.swaps   = 0
     this.getDelay = () => 300
+    this.functions = {}   // <-- ADD THIS LINE
   }
 
   stop() { this.stopped = true }
@@ -1118,7 +1119,6 @@ class Interpreter {
       case 'if':     await this.execIf(s, env); break
       case 'break':  throw { t:'break' }
       case 'function': {
-        if (!this.functions) this.functions = {}
         this.functions[s.name] = s
         break
       }
