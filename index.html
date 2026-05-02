@@ -614,7 +614,7 @@ wait(50)   -- final rest`,
 
 // ─── tokenizer ────────────────────────────────────────────────────────────────
 const KEYWORDS = new Set(['for','to','step','do','end','while','if','then','else',
-  'elseif','and','or','not','true','false','let','break'])
+  'elseif','and','or','not','true','false','let','break','function','return'])
 
 function tokenize(src) {
   const toks = []
@@ -1305,7 +1305,7 @@ class Interpreter {
 }
 
 // ─── syntax highlighter ───────────────────────────────────────────────────────
-const HL_KW       = new Set(['for','to','step','do','end','while','if','then','else','elseif','and','or','not','true','false','let','break'])
+const HL_KW = new Set(['for','to','step','do','end','while','if','then','else','elseif','and','or','not','true','false','let','break','function','return'])
 const HL_BUILTINS = new Set(['swap','getValue','mark','unmark','unmarkAll','wait','length','floor','ceil','round','abs','sqrt','min','max','random','pi','e','isSorted','addBar','removeBar','resizeBar'])
 
 function highlight(code) {
