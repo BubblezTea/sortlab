@@ -743,7 +743,32 @@ class Visualizer {
         setTimeout(() => el.classList.remove('sorted-flash'), 300)
         playSound(this.values[i], 'done')
       }, i * 35)
-    })
+    })2
+  }
+
+  shakeAndTintRed() {
+    const originalColors = this.els.map(el => el.style.background)
+    this.els.forEach(el => { el.style.background = '#f87171' })
+    let shakes = 0
+    const animate = () => {
+      if (shakes >= 3) {
+        this.els.forEach((el, i) => { el.style.background = originalColors[i] })
+        return
+      }
+      this.els.forEach(el => {
+        const left = parseFloat(el.style.left)
+        el.style.left = (left + (shakes % 2 === 0 ? 4 : -4)) + 'px'
+      })
+      setTimeout(() => {
+        this.els.forEach(el => {
+          const left = parseFloat(el.style.left)
+          el.style.left = (left + (shakes % 2 === 0 ? -4 : 4)) + 'px'
+        })
+        shakes++
+        setTimeout(animate, 60)
+      }, 60)
+    }
+    animate()
   }
 }
 
@@ -923,7 +948,7 @@ class Interpreter {
     const args = await Promise.all(argNodes.map(a => this.evalExpr(a, env)))
     const n    = this.vis.length
     const chk  = (i, fn) => { if (i < 0 || i >= n) throw new Error(`${fn}: index ${i+1} is out of range (1 to ${n})`) }
-
+  
     switch (name) {
       case 'swap': {
         const [i, j] = [Math.round(args[0])-1, Math.round(args[1])-1]
@@ -977,6 +1002,17 @@ class Interpreter {
           return min + Math.floor(Math.random() * (max - min + 1))
         }
         throw new Error('random() expects 0,1 or 2 arguments')
+      }
+      case 'isSorted': {
+        let sorted = true
+        for (let i = 0; i < this.vis.values.length - 1; i++) {
+          if (this.vis.values[i] > this.vis.values[i + 1]) {
+            sorted = false
+            break
+          }
+        }
+        if (!sorted) this.vis.shakeAndTintRed()
+        return sorted
       }
       default: throw new Error(`Unknown function: '${name}'`)
     }
