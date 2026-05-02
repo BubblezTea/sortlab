@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sort Lab • Now even quieter!</title>
+<title>Sort Lab • Now even louder!</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
@@ -348,6 +348,7 @@ main {
     <button class="btn primary" id="runBtn">▶ Run</button>
     <button class="btn danger"  id="stopBtn" disabled>■ Stop</button>
     <button class="btn"         id="shuffleBtn">⟳ Shuffle</button>
+    <button class="btn"         id="reverbBtn" style="background:#2a2a3d;">🎹 Reverb OFF</button>
   </div>
   <div class="slider-wrap">
     Speed
@@ -371,7 +372,7 @@ main {
       <button class="ex-btn" data-algo="insertion">Insertion Sort</button>
       <button class="ex-btn" data-algo="selection">Selection Sort</button>
       <button class="ex-btn" data-algo="cocktail">Cocktail Sort</button>
-      <button class="ex-btn" data-algo="randomDemo">✨ random() demo</button>
+      <button class="ex-btn" data-algo="furelise">Fur Elise Demo</button>
     </div>
     <div class="editor-wrap">
       <pre id="hlLayer" aria-hidden="true"></pre>
@@ -490,29 +491,41 @@ while left < right do
     left = left + 1
 end`,
 
-  randomDemo: `-- ✨ random() demo: shuffle array using math.random
--- then sort with bubble to see the power of randomness!
--- random() without args returns float 0..1
--- random(n) returns integer 1..n
--- random(a,b) returns integer between a and b (inclusive)
-
--- 1) Fisher-Yates shuffle using random(i, length)
-print('shuffling bars...')
-for i = length to 2 step -1 do
-    j = random(1, i)   -- random integer between 1 and i
-    if i ~= j then
-        swap(i, j)
-    end
-end
-
--- 2) classic bubble sort
-for i = 1 to length do
-    for j = 1 to length - i do
-        if getValue(j) > getValue(j + 1) then
-            swap(j, j + 1)
-        end
-    end
-end`
+  furElise: `-- Für Elise (main theme) - Piano with reverb
+addBar(64) wait(250) wait(35)
+addBar(61) wait(180) wait(35)
+addBar(64) wait(250) wait(35)
+addBar(61) wait(180) wait(35)
+addBar(64) wait(300) wait(50)
+addBar(48) wait(180) wait(35)
+addBar(60) wait(180) wait(35)
+addBar(52) wait(300) wait(50)
+addBar(44) wait(500) wait(80)
+addBar(52) wait(180) wait(35)
+addBar(64) wait(180) wait(35)
+addBar(76) wait(180) wait(35)
+addBar(80) wait(350) wait(80)
+addBar(64) wait(180) wait(35)
+addBar(41) wait(180) wait(35)
+addBar(80) wait(180) wait(35)
+addBar(84) wait(400) wait(80)
+addBar(64) wait(250) wait(35)
+addBar(61) wait(180) wait(35)
+addBar(64) wait(250) wait(35)
+addBar(61) wait(180) wait(35)
+addBar(64) wait(300) wait(50)
+addBar(48) wait(180) wait(35)
+addBar(60) wait(180) wait(35)
+addBar(52) wait(300) wait(80)
+addBar(44) wait(400) wait(50)
+addBar(52) wait(400)
+addBar(64) wait(250) wait(35)
+addBar(76) wait(180) wait(35)
+addBar(80) wait(250) wait(35)
+addBar(64) wait(180) wait(35)
+addBar(84) wait(300) wait(50)
+addBar(80) wait(180) wait(35)
+addBar(76) wait(500) wait(50)`,
 }
 
 // ─── tokenizer ────────────────────────────────────────────────────────────────
@@ -801,44 +814,123 @@ class Visualizer {
 }
 
 // ─── audio ────────────────────────────────────────────────────────────────────
-let _audioCtx = null
-const CHROMATIC = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]
+let _audioCtx = null;
+let reverbEnabled = false;
+let reverbNode = null;
+let masterGain = null;
+
+const CHROMATIC = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24];
 
 function getCtx() {
-  if (!_audioCtx) _audioCtx = new (window.AudioContext||window.webkitAudioContext)()
-  if (_audioCtx.state === 'suspended') _audioCtx.resume()
-  return _audioCtx
+  if (!_audioCtx) {
+    _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = _audioCtx.createGain();
+    masterGain.gain.value = 0.3;
+    masterGain.connect(_audioCtx.destination);
+    createReverb();
+  }
+  if (_audioCtx.state === 'suspended') _audioCtx.resume();
+  return _audioCtx;
+}
+
+function createReverb() {
+  if (!_audioCtx) return;
+  if (reverbNode) reverbNode.disconnect();
+  const convolver = _audioCtx.createConvolver();
+  const rate = _audioCtx.sampleRate;
+  const length = rate * 1.2;
+  const impulse = _audioCtx.createBuffer(2, length, rate);
+  for (let channel = 0; channel < 2; channel++) {
+    const data = impulse.getChannelData(channel);
+    for (let i = 0; i < length; i++) {
+      const decay = Math.exp(-i / (rate * 0.3));
+      data[i] = (Math.random() * 2 - 1) * decay;
+    }
+  }
+  convolver.buffer = impulse;
+  reverbNode = convolver;
+}
+
+function updateReverb() {
+  if (!_audioCtx) return;
+  masterGain.disconnect();
+  if (reverbEnabled) {
+    masterGain.connect(reverbNode);
+    reverbNode.connect(_audioCtx.destination);
+  } else {
+    masterGain.connect(_audioCtx.destination);
+  }
+}
+
+function playPianoNote(freq, velocity = 0.7, duration = 0.8) {
+  try {
+    const ctx = getCtx();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    osc.type = 'triangle';
+    osc.frequency.value = freq;
+    const osc2 = ctx.createOscillator();
+    osc2.type = 'sine';
+    osc2.frequency.value = freq * 2;
+    osc2.detune.value = -2;
+    const noise = ctx.createBufferSource();
+    const bufferSize = ctx.sampleRate * 0.02;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.25;
+    noise.buffer = buffer;
+    const gainNode = ctx.createGain();
+    const gainNode2 = ctx.createGain();
+    const noiseGain = ctx.createGain();
+    const env = ctx.createGain();
+    env.gain.setValueAtTime(0, now);
+    env.gain.linearRampToValueAtTime(velocity * 0.8, now + 0.01);
+    env.gain.exponentialRampToValueAtTime(velocity * 0.25, now + 0.15);
+    env.gain.setValueAtTime(velocity * 0.25, now + duration - 0.1);
+    env.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    osc.connect(gainNode);
+    osc2.connect(gainNode2);
+    noise.connect(noiseGain);
+    gainNode.connect(env);
+    gainNode2.connect(env);
+    noiseGain.connect(env);
+    env.connect(masterGain);
+    gainNode.gain.value = 0.6;
+    gainNode2.gain.value = 0.25;
+    noiseGain.gain.setValueAtTime(0.08, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+    osc.start(now);
+    osc2.start(now);
+    noise.start(now);
+    osc.stop(now + duration);
+    osc2.stop(now + duration);
+    noise.stop(now + 0.05);
+  } catch(e) {}
 }
 
 function snapFreq(raw) {
-  const midi = n => 440 * Math.pow(2, (n - 69) / 12)
-  let best = 440, bestDist = Infinity
+  const midi = n => 440 * Math.pow(2, (n - 69) / 12);
+  let best = 440, bestDist = Infinity;
   for (let oct = -1; oct <= 2; oct++) {
     for (const s of CHROMATIC) {
-      const f = midi(60 + oct * 12 + s)
-      const d = Math.abs(f - raw)
-      if (d < bestDist) { bestDist = d; best = f }
+      const f = midi(60 + oct * 12 + s);
+      const d = Math.abs(f - raw);
+      if (d < bestDist) { bestDist = d; best = f; }
     }
   }
-  return best
+  return best;
 }
 
 function playSound(value, type) {
-  try {
-    const ctx = getCtx()
-    const osc  = ctx.createOscillator()
-    const gain = ctx.createGain()
-    const now  = ctx.currentTime
-    const raw  = 160 + (value / 100) * 780
-    osc.frequency.value = snapFreq(raw)
-    osc.type = type === 'swap' ? 'triangle' : type === 'done' ? 'sine' : 'sine'
-    const vol = type === 'compare' ? 0.06 : type === 'done' ? 0.12 : 0.18
-    const dur = type === 'done' ? 0.35 : 0.12
-    gain.gain.setValueAtTime(vol, now)
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + dur)
-    osc.connect(gain); gain.connect(ctx.destination)
-    osc.start(now); osc.stop(now + dur + 0.05)
-  } catch(e) {}
+  const raw = 160 + (value / 100) * 780;
+  const freq = snapFreq(raw);
+  let duration = 0.35, velocity = 0.5;
+  if (type === 'swap') { velocity = 0.65; duration = 0.28; }
+  else if (type === 'compare') { velocity = 0.4; duration = 0.2; }
+  else if (type === 'done') { velocity = 0.8; duration = 0.6; }
+  else if (type === 'add') { velocity = 0.55; duration = 0.35; }
+  else if (type === 'resize') { velocity = 0.5; duration = 0.25; }
+  playPianoNote(freq, velocity, duration);
 }
 
 // ─── interpreter ──────────────────────────────────────────────────────────────
@@ -1124,6 +1216,7 @@ const hlLayer      = document.getElementById('hlLayer')
 const runBtn       = document.getElementById('runBtn')
 const stopBtn      = document.getElementById('stopBtn')
 const shuffleBtn   = document.getElementById('shuffleBtn')
+const reverbBtn    = document.getElementById('reverbBtn');
 const speedSlider  = document.getElementById('speedSlider')
 const barsSlider   = document.getElementById('barsSlider')
 const barsLabel    = document.getElementById('barsLabel')
@@ -1201,6 +1294,12 @@ function shuffle() {
   setStatus('', 'idle')
 }
 
+function reverb() {
+  reverbEnabled = !reverbEnabled;
+  updateReverb();
+  reverbBtn.textContent = reverbEnabled ? '🎹 Reverb ON' : '🎹 Reverb OFF';
+}
+
 // editor sync
 codeEditor.addEventListener('input', () => {
   hlLayer.innerHTML = highlight(codeEditor.value)
@@ -1234,6 +1333,8 @@ barsSlider.addEventListener('input', () => { barsLabel.textContent = barsSlider.
 runBtn.addEventListener('click', run)
 stopBtn.addEventListener('click', stop)
 shuffleBtn.addEventListener('click', shuffle)
+reverbBtn.addEventListener('click', reverb)
+  
 
 // init
 codeEditor.value = EXAMPLES.gnome
