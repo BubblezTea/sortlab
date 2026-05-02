@@ -1045,6 +1045,7 @@ class Interpreter {
           const val = args.length > 0 ? Math.min(95, Math.max(5, args[0])) : Math.floor(Math.random() * 88) + 8
           this.vis.values.push(val)
           this.vis.updateLayout()
+          this.vis.flashBar(i)
           break
         }
        case 'removeBar': {
@@ -1064,6 +1065,7 @@ class Interpreter {
           const i = Math.round(args[0]) - 1
           const newVal = Math.min(95, Math.max(5, args[1]))
           chk(i, 'resizeBar')
+          this.vis.flashBar(i)
           this.vis.values[i] = newVal
           this.vis.updateLayout()
           break
