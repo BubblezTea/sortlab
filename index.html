@@ -405,6 +405,11 @@ main {
         <div class="ref-item"><code>pi()</code><span>π ≈ 3.14159</span></div>
         <div class="ref-item"><code>e()</code><span>Euler's e ≈ 2.718</span></div>
         <div class="ref-item"><code>floor/ceil/round/abs</code><span>math helpers</span></div>
+        <div class="ref-item"><code>addBar()</code><span>add random bar at end</span></div>
+        <div class="ref-item"><code>addBar(height)</code><span>add bar with height 5-95</span></div>
+        <div class="ref-item"><code>removeBar(i)</code><span>remove bar i (or last if omitted)</span></div>
+        <div class="ref-item"><code>resizeBar(i, h)</code><span>change bar i to height h</span></div>
+        <div class="ref-item"><code>isSorted()</code><span>check if sorted (shakes if not)</span></div>
       </div>
     </div>
   </div>
@@ -734,6 +739,29 @@ class Visualizer {
     })
   }
 
+  updateLayout() {
+    const n = this.values.length
+    if (n === 0) return
+    this.barW = this.container.clientWidth / n
+    // update existing bars or create new ones
+    while (this.els.length < n) {
+      const el = document.createElement('div')
+      el.className = 'bar'
+      this.container.appendChild(el)
+      this.els.push(el)
+    }
+    while (this.els.length > n) {
+      const el = this.els.pop()
+      el.remove()
+    }
+    this.els.forEach((el, i) => {
+      el.style.height = this.values[i] + '%'
+      el.style.left = (i * this.barW) + 'px'
+      el.style.width = Math.max(2, this.barW - 2) + 'px'
+      el.style.background = this.defaultColor(this.values[i])
+    })
+  }
+
   markAllSorted() {
     const n = this.els.length
     this.els.forEach((el, i) => {
@@ -1014,6 +1042,33 @@ class Interpreter {
         if (!sorted) this.vis.shakeAndTintRed()
         return sorted
       }
+        case 'addBar': {
+          const val = args.length > 0 ? Math.min(95, Math.max(5, args[0])) : Math.floor(Math.random() * 88) + 8
+          this.vis.values.push(val)
+          this.vis.updateLayout()
+          break
+        }
+       case 'removeBar': {
+          let index = -1
+          if (args.length > 0) {
+            index = Math.round(args[0]) - 1
+            chk(index, 'removeBar')
+          } else {
+            index = this.vis.values.length - 1
+          }
+          if (this.vis.values.length <= 1) throw new Error('cannot remove last bar')
+          this.vis.values.splice(index, 1)
+          this.vis.updateLayout()
+          break
+        }
+        case 'resizeBar': {
+          const i = Math.round(args[0]) - 1
+          const newVal = Math.min(95, Math.max(5, args[1]))
+          chk(i, 'resizeBar')
+          this.vis.values[i] = newVal
+          this.vis.updateLayout()
+          break
+        }
       default: throw new Error(`Unknown function: '${name}'`)
     }
   }
@@ -1021,7 +1076,7 @@ class Interpreter {
 
 // ─── syntax highlighter ───────────────────────────────────────────────────────
 const HL_KW       = new Set(['for','to','step','do','end','while','if','then','else','elseif','and','or','not','true','false','let','break'])
-const HL_BUILTINS = new Set(['swap','getValue','mark','unmark','unmarkAll','wait','length','floor','ceil','round','abs','sqrt','min','max','random','pi','e'])
+const HL_BUILTINS = new Set(['swap','getValue','mark','unmark','unmarkAll','wait','length','floor','ceil','round','abs','sqrt','min','max','random','pi','e','isSorted','addBar','removeBar','resizeBar'])
 
 function highlight(code) {
   let out = []; let i = 0
