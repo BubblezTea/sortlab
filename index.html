@@ -1136,7 +1136,7 @@ let interp = null
 
 function getDelay() {
   const s = parseInt(speedSlider.value)
-  return (10 - s) * 22
+  return Math.round(0 + ((10 - s) / 9) * 100)
 }
 
 function setStatus(state, msg) {
