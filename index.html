@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sort Lab</title>
+<title>Sort Lab • with math.random & co.</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
@@ -275,7 +275,7 @@ main {
 
 /* ── docs / reference ─────────────────────── */
 .ref-panel {
-  height: 130px;
+  height: 140px;
   background: var(--bg2);
   border-top: 1px solid var(--border);
   padding: 10px 16px;
@@ -292,7 +292,7 @@ main {
 }
 .ref-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   gap: 4px 20px;
 }
 .ref-item {
@@ -371,6 +371,7 @@ main {
       <button class="ex-btn" data-algo="insertion">Insertion Sort</button>
       <button class="ex-btn" data-algo="selection">Selection Sort</button>
       <button class="ex-btn" data-algo="cocktail">Cocktail Sort</button>
+      <button class="ex-btn" data-algo="randomDemo">✨ random() demo</button>
     </div>
     <div class="editor-wrap">
       <pre id="hlLayer" aria-hidden="true"></pre>
@@ -390,25 +391,27 @@ main {
     </div>
 
     <div class="ref-panel">
-      <h4>Commands</h4>
+      <h4>🧪 Built‑ins + math.random, π, e</h4>
       <div class="ref-grid">
         <div class="ref-item"><code>swap(i, j)</code><span>swap two bars</span></div>
-        <div class="ref-item"><code>getValue(i)</code><span>get the height of bar i</span></div>
-        <div class="ref-item"><code>length</code><span>total number of bars</span></div>
-        <div class="ref-item"><code>mark(i, "color")</code><span>color a bar (red/green/yellow/blue/purple)</span></div>
-        <div class="ref-item"><code>unmark(i)</code><span>remove color from bar i</span></div>
-        <div class="ref-item"><code>unmarkAll()</code><span>remove all colors</span></div>
-        <div class="ref-item"><code>for i = 1 to length do</code><span>repeat with a counter</span></div>
-        <div class="ref-item"><code>while something do</code><span>repeat while true</span></div>
-        <div class="ref-item"><code>if a > b then</code><span>do something if true</span></div>
-        <div class="ref-item"><code>floor(x) · ceil(x) · abs(x)</code><span>math helpers</span></div>
+        <div class="ref-item"><code>getValue(i)</code><span>get height of bar i</span></div>
+        <div class="ref-item"><code>length</code><span>number of bars</span></div>
+        <div class="ref-item"><code>mark(i, "color")</code><span>red/green/yellow/blue/purple</span></div>
+        <div class="ref-item"><code>unmark(i)</code><span>remove color</span></div>
+        <div class="ref-item"><code>unmarkAll()</code><span>clear all colors</span></div>
+        <div class="ref-item"><code>random()</code><span>float in [0,1)</span></div>
+        <div class="ref-item"><code>random(max)</code><span>integer 1..max</span></div>
+        <div class="ref-item"><code>random(min,max)</code><span>integer min..max</span></div>
+        <div class="ref-item"><code>pi()</code><span>π ≈ 3.14159</span></div>
+        <div class="ref-item"><code>e()</code><span>Euler's e ≈ 2.718</span></div>
+        <div class="ref-item"><code>floor/ceil/round/abs</code><span>math helpers</span></div>
       </div>
     </div>
   </div>
 </main>
 
 <script>
-// ─── examples ────────────────────────────────────────────────────────────────
+// ─── examples (added random demo) ────────────────────────────────────────────
 const EXAMPLES = {
   gnome: `-- gnome sort: the simplest real sorting algorithm!
 -- imagine a garden gnome sorting flower pots:
@@ -480,6 +483,30 @@ while left < right do
         end
     end
     left = left + 1
+end`,
+
+  randomDemo: `-- ✨ random() demo: shuffle array using math.random
+-- then sort with bubble to see the power of randomness!
+-- random() without args returns float 0..1
+-- random(n) returns integer 1..n
+-- random(a,b) returns integer between a and b (inclusive)
+
+-- 1) Fisher-Yates shuffle using random(i, length)
+print('shuffling bars...')
+for i = length to 2 step -1 do
+    j = random(1, i)   -- random integer between 1 and i
+    if i ~= j then
+        swap(i, j)
+    end
+end
+
+-- 2) classic bubble sort
+for i = 1 to length do
+    for j = 1 to length - i do
+        if getValue(j) > getValue(j + 1) then
+            swap(j, j + 1)
+        end
+    end
 end`
 }
 
@@ -935,14 +962,30 @@ class Interpreter {
       case 'sqrt':      return Math.sqrt(args[0])
       case 'min':       return Math.min(args[0], args[1])
       case 'max':       return Math.max(args[0], args[1])
-      default:          throw new Error(`Unknown function: '${name}'`)
+      case 'pi':        return Math.PI
+      case 'e':         return Math.E
+      case 'random': {
+        if (args.length === 0) return Math.random()
+        if (args.length === 1) {
+          let max = Math.floor(args[0])
+          if (max < 1) throw new Error('random(max): max must be ≥ 1')
+          return Math.floor(Math.random() * max) + 1
+        }
+        if (args.length === 2) {
+          let min = Math.floor(args[0]), max = Math.floor(args[1])
+          if (min > max) [min, max] = [max, min]
+          return min + Math.floor(Math.random() * (max - min + 1))
+        }
+        throw new Error('random() expects 0,1 or 2 arguments')
+      }
+      default: throw new Error(`Unknown function: '${name}'`)
     }
   }
 }
 
 // ─── syntax highlighter ───────────────────────────────────────────────────────
 const HL_KW       = new Set(['for','to','step','do','end','while','if','then','else','elseif','and','or','not','true','false','let','break'])
-const HL_BUILTINS = new Set(['swap','getValue','mark','unmark','unmarkAll','wait','length','floor','ceil','round','abs','sqrt','min','max'])
+const HL_BUILTINS = new Set(['swap','getValue','mark','unmark','unmarkAll','wait','length','floor','ceil','round','abs','sqrt','min','max','random','pi','e'])
 
 function highlight(code) {
   let out = []; let i = 0
@@ -1104,7 +1147,7 @@ codeEditor.dispatchEvent(new Event('input'))
 vis.init(parseInt(barsSlider.value))
 setStatus('', 'idle')
 
-// handle resize
+// resize handler
 window.addEventListener('resize', () => {
   const n = vis.length
   if (!n) return
